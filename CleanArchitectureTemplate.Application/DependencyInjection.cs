@@ -1,6 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 
-namespace CleanArchitectureTemplate.Infrastructure;
+namespace CleanArchitectureTemplate.Application;
 
 
 public static class DependencyInjection
