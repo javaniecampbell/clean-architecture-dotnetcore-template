@@ -5,26 +5,29 @@ using CleanArchitectureTemplate.Application.Common.Interfaces.Authentication;
 using Microsoft.IdentityModel.Tokens;
 using System.Collections.Generic;
 using CleanArchitectureTemplate.Application.Common.Interfaces.Services;
+using Microsoft.Extensions.Options;
 
 namespace CleanArchitectureTemplate.Infrastructure.Authentication;
 
 internal class JwtTokenGenerator : IJwtTokenGenerator
 {
     private readonly IDateTimeProvider _dateTimeProvider;
-
-    public JwtTokenGenerator(IDateTimeProvider dateTimeProvider)
+    private readonly JwtSettings _jwtSettings;
+    public JwtTokenGenerator(IDateTimeProvider dateTimeProvider, IOptions<JwtSettings> jwtSettings)
     {
         _dateTimeProvider = dateTimeProvider;
+        _jwtSettings = jwtSettings.Value;
     }
+
 
     public string GenerateToken(Guid userId, string firstName, string lastName)
     {
         var signingCredentials = new SigningCredentials(
-            new SymmetricSecurityKey(Encoding.UTF8.GetBytes("This-is-a-secret-gggggggg-key-long-uuuuu")),
+            new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Secret)),
             SecurityAlgorithms.HmacSha256
         );
 
-        var claims = new []
+        var claims = new[]
         {
             new Claim(JwtRegisteredClaimNames.Sub, $"{firstName} {lastName}"),
             new Claim(JwtRegisteredClaimNames.GivenName, firstName),
@@ -32,11 +35,12 @@ internal class JwtTokenGenerator : IJwtTokenGenerator
             new Claim(JwtRegisteredClaimNames.UniqueName, userId.ToString()),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         }.ToList();
-        
+
         var securityToken = new JwtSecurityToken(
-            issuer: "CleanArchitectureTemplate",
+            issuer: _jwtSettings.Issuer,
+            audience: _jwtSettings.Audience,
             claims: claims,
-            expires: _dateTimeProvider.UtcNow.AddMinutes(30),
+            expires: _dateTimeProvider.UtcNow.AddMinutes(_jwtSettings.ExpirationInMinutes),
             signingCredentials: signingCredentials
         );
 
