@@ -4,10 +4,19 @@ using System.Text;
 using CleanArchitectureTemplate.Application.Common.Interfaces.Authentication;
 using Microsoft.IdentityModel.Tokens;
 using System.Collections.Generic;
+using CleanArchitectureTemplate.Application.Common.Interfaces.Services;
+
 namespace CleanArchitectureTemplate.Infrastructure.Authentication;
 
 internal class JwtTokenGenerator : IJwtTokenGenerator
 {
+    private readonly IDateTimeProvider _dateTimeProvider;
+
+    public JwtTokenGenerator(IDateTimeProvider dateTimeProvider)
+    {
+        _dateTimeProvider = dateTimeProvider;
+    }
+
     public string GenerateToken(Guid userId, string firstName, string lastName)
     {
         var signingCredentials = new SigningCredentials(
@@ -27,7 +36,7 @@ internal class JwtTokenGenerator : IJwtTokenGenerator
         var securityToken = new JwtSecurityToken(
             issuer: "CleanArchitectureTemplate",
             claims: claims,
-            expires: DateTime.UtcNow.AddMinutes(30),
+            expires: _dateTimeProvider.UtcNow.AddMinutes(30),
             signingCredentials: signingCredentials
         );
 
