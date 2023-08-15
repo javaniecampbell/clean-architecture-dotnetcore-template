@@ -22,6 +22,9 @@ internal class JwtTokenGenerator : IJwtTokenGenerator
 
     public string GenerateToken(Guid userId, string firstName, string lastName)
     {
+        if (_jwtSettings.Secret is null)
+            throw new NullReferenceException("Jwt Settings -> Secret is not configured correctly");
+
         var signingCredentials = new SigningCredentials(
             new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Secret)),
             SecurityAlgorithms.HmacSha256
